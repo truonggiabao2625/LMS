@@ -12,8 +12,8 @@ public class XacThucController(IDichVuXacThuc dichVu, IConfiguration cauHinh) : 
 {
     private string FrontendUrl => cauHinh["FRONTEND_URL"] ?? "http://localhost:5173";
     private bool GoogleDaDuocCauHinh =>
-        !string.IsNullOrWhiteSpace(FirstConfigured(cauHinh["Authentication:Google:ClientId"], cauHinh["GOOGLE_CLIENT_ID"])) &&
-        !string.IsNullOrWhiteSpace(FirstConfigured(cauHinh["Authentication:Google:ClientSecret"], cauHinh["GOOGLE_CLIENT_SECRET"]));
+        !string.IsNullOrWhiteSpace(FirstConfigured(cauHinh["GOOGLE_CLIENT_ID"], cauHinh["Authentication:Google:ClientId"])) &&
+        !string.IsNullOrWhiteSpace(FirstConfigured(cauHinh["GOOGLE_CLIENT_SECRET"], cauHinh["Authentication:Google:ClientSecret"]));
 
     private static string? FirstConfigured(params string?[] values) =>
         values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));

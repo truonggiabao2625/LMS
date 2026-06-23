@@ -175,8 +175,8 @@ var authentication = builder.Services
     });
 
 // Google authentication configuration
-var googleClientId = FirstConfigured(builder.Configuration["Authentication:Google:ClientId"], builder.Configuration["GOOGLE_CLIENT_ID"]);
-var googleClientSecret = FirstConfigured(builder.Configuration["Authentication:Google:ClientSecret"], builder.Configuration["GOOGLE_CLIENT_SECRET"]);
+var googleClientId = FirstConfigured(builder.Configuration["GOOGLE_CLIENT_ID"], builder.Configuration["Authentication:Google:ClientId"]);
+var googleClientSecret = FirstConfigured(builder.Configuration["GOOGLE_CLIENT_SECRET"], builder.Configuration["Authentication:Google:ClientSecret"]);
 if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
 {
     authentication.AddGoogle("Google", options =>
