@@ -61,7 +61,7 @@ export function AuthProvider({ children }) {
     return normalized;
   }, []);
 
-  const logout = useCallback(() => {
+  const logout = useCallback((reason) => {
     axios.post('/api/auth/logout').catch(() => null);
     persistUser(null);
     localStorage.removeItem('token');
@@ -70,7 +70,7 @@ export function AuthProvider({ children }) {
     delete axios.defaults.headers.common['X-Student-Preview'];
 
     if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-      window.location.href = '/login';
+      window.location.href = reason ? `/login?reason=${reason}` : '/login';
     }
   }, [persistUser]);
 
@@ -133,7 +133,8 @@ export function AuthProvider({ children }) {
       (response) => response,
       (error) => {
         if (error.response?.status === 401) {
-          logout();
+          const wasLoggedIn = Boolean(localStorage.getItem('token'));
+          logout(wasLoggedIn ? 'kickout' : null);
         }
         return Promise.reject(error);
       }

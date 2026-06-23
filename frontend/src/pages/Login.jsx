@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowRight, Loader2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -32,6 +32,14 @@ export default function Login() {
   const { login, startSocialLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('reason') === 'kickout') {
+      setError('Tài khoản của bạn đã được đăng nhập từ một thiết bị khác. Phiên làm việc này đã bị kết thúc.');
+      navigate('/login', { replace: true });
+    }
+  }, [location.search, navigate]);
 
   const normalizedEmail = useMemo(() => email.trim(), [email]);
 
