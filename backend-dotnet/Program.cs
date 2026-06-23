@@ -253,11 +253,8 @@ await using (var scope = app.Services.CreateAsyncScope())
             END;
         END;
     ");
-
-    if (app.Environment.IsDevelopment())
-    {
-        await SeedData.SeedAsync(db);
-    }
+    // Luôn chạy seed data để đảm bảo tài khoản demo và dữ liệu mẫu có sẵn trên cơ sở dữ liệu Cloud
+    await SeedData.SeedAsync(db);
 }
 
 if (app.Environment.IsDevelopment())
