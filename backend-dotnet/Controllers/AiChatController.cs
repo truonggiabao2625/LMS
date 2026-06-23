@@ -47,8 +47,12 @@ public class AiChatController(ApplicationDbContext db, IConfiguration configurat
             .ToListAsync();
 
         var apiKey = configuration["Gemini:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "YOUR_GEMINI_API_KEY_HERE")
+        {
+            apiKey = configuration["GEMINI_API_KEY"];
+        }
 
-        if (!string.IsNullOrWhiteSpace(apiKey))
+        if (!string.IsNullOrWhiteSpace(apiKey) && apiKey != "YOUR_GEMINI_API_KEY_HERE")
         {
             try
             {
