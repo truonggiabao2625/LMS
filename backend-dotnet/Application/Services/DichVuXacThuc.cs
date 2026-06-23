@@ -141,13 +141,17 @@ public class DichVuXacThuc(IConfiguration cauHinh, ApplicationDbContext db) : ID
 
     public string TaoToken(NguoiDung nguoiDung)
     {
+        var tokenId = Guid.NewGuid().ToString("N");
+        TroGiup.DatPhienDangNhap(nguoiDung.Id, tokenId);
+
         var thongTin = new SigningCredentials(KhoaJwt, SecurityAlgorithms.HmacSha256);
         var token = new JwtSecurityToken(
             claims:
             [
                 new Claim(ClaimTypes.NameIdentifier, nguoiDung.Id),
                 new Claim(ClaimTypes.Email, nguoiDung.Email),
-                new Claim(ClaimTypes.Role, nguoiDung.VaiTro)
+                new Claim(ClaimTypes.Role, nguoiDung.VaiTro),
+                new Claim("sid", tokenId)
             ],
             expires: DateTime.UtcNow.AddDays(7),
             signingCredentials: thongTin

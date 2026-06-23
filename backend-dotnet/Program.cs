@@ -157,6 +157,21 @@ var authentication = builder.Services
                 }
 
                 return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                var userId = context.Principal?.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                var tokenId = context.Principal?.FindFirst("sid")?.Value;
+
+                if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(tokenId))
+                {
+                    if (!LMS.Api.Application.Services.TroGiup.KiemTraPhienDangNhap(userId, tokenId))
+                    {
+                        context.Fail("Phiên đăng nhập đã bị vô hiệu hóa do có thiết bị khác đăng nhập.");
+                    }
+                }
+
+                return Task.CompletedTask;
             }
         };
         options.TokenValidationParameters = new TokenValidationParameters

@@ -6,6 +6,18 @@ namespace LMS.Api.Application.Services;
 
 public static class TroGiup
 {
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> ActiveSessions = new();
+
+    public static void DatPhienDangNhap(string userId, string tokenId)
+    {
+        ActiveSessions[userId] = tokenId;
+    }
+
+    public static bool KiemTraPhienDangNhap(string userId, string tokenId)
+    {
+        return ActiveSessions.GetOrAdd(userId, tokenId) == tokenId;
+    }
+
     public static string DinhDangTienVND(int soTien) =>
         string.Create(CultureInfo.GetCultureInfo("vi-VN"), $"{soTien:C0}");
 
