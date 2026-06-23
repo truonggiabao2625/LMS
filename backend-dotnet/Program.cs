@@ -283,4 +283,6 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapHub<LMS.Api.Hubs.ChatHub>("/chatHub");
 
+app.MapGet("/", () => Results.Ok("Skillio LMS API is running."));
+
 app.Run();
