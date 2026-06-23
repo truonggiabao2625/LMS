@@ -248,6 +248,11 @@ public class AiChatController(ApplicationDbContext db, IConfiguration configurat
             }
         }
 
+        if (string.IsNullOrWhiteSpace(reply))
+        {
+            reply = "Chào bạn! Dưới đây là danh sách các khóa học hàng đầu trên Skillio phù hợp nhất với tìm kiếm của bạn:";
+        }
+
         foreach (var c in resultList)
         {
             recommendedList.Add(new
