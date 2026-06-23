@@ -457,6 +457,23 @@ const InstructorDashboard = ({ data, loading }) => {
   );
 };
 
+const getActivityConfig = (title = '', description = '') => {
+  const text = (title + ' ' + description).toLowerCase();
+  if (text.includes('rút tiền') || text.includes('giao dịch') || text.includes('thanh toán') || text.includes('tiền')) {
+    return { icon: Wallet, style: 'bg-emerald-50 text-emerald-600 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400' };
+  }
+  if (text.includes('khóa học') || text.includes('khoá học') || text.includes('bài học')) {
+    return { icon: BookOpen, style: 'bg-purple-50 text-purple-600 border-purple-100 dark:bg-purple-950/20 dark:text-purple-400' };
+  }
+  if (text.includes('giảng viên') || text.includes('đối tác') || text.includes('hồ sơ')) {
+    return { icon: GraduationCap, style: 'bg-blue-50 text-blue-600 border-blue-100 dark:bg-blue-950/20 dark:text-blue-400' };
+  }
+  if (text.includes('người dùng') || text.includes('tài khoản') || text.includes('đăng ký')) {
+    return { icon: Users, style: 'bg-indigo-50 text-indigo-600 border-indigo-100 dark:bg-indigo-950/20 dark:text-indigo-400' };
+  }
+  return { icon: FileCheck, style: 'bg-slate-50 text-slate-600 border-slate-100 dark:bg-slate-900 dark:text-slate-400' };
+};
+
 const AdminDashboard = ({ data, loading }) => {
   const stats = data?.stats || data || {};
   const recentUsers = data?.recentUsers || [];
@@ -499,9 +516,10 @@ const AdminDashboard = ({ data, loading }) => {
   ].filter((item) => !item.hideWhenZero || item.value > 0);
 
   return (
-    <div className="animate-fade-in-up space-y-5">
+    <div className="animate-fade-in-up space-y-6">
       <div>
         <h1 className="mb-1 text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">Dashboard Quản trị</h1>
+        <p className="text-sm text-slate-500">Xem tổng quan số liệu hệ thống và xử lý các yêu cầu cần phê duyệt.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -516,19 +534,19 @@ const AdminDashboard = ({ data, loading }) => {
         {loading ? (
           <ListSkeleton />
         ) : taskItems.length > 0 ? (
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
             {taskItems.map((item) => (
               <AdminTaskItem key={item.label} {...item} />
             ))}
           </div>
         ) : (
-          <p className="rounded-xl bg-slate-50 px-4 py-5 text-center text-sm text-slate-500">Không có việc cần xử lý.</p>
+          <p className="rounded-xl bg-slate-50 px-4 py-5 text-center text-sm text-slate-500 border border-slate-100">Không có việc cần xử lý.</p>
         )}
       </section>
 
       <div className="grid grid-cols-1 gap-5 xl:grid-cols-3">
         <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm xl:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
+          <div className="mb-4 flex items-center justify-between border-b border-slate-50 pb-4">
             <h3 className="font-semibold text-slate-900">Người dùng mới nhất</h3>
             <Link to="/admin/users" className="text-sm font-medium text-purple-600 hover:underline">
               Tất cả
@@ -537,22 +555,38 @@ const AdminDashboard = ({ data, loading }) => {
           {loading ? (
             <ListSkeleton />
           ) : recentUsers.length > 0 ? (
-            <div className="divide-y divide-slate-50">
-              {recentUsers.map((user) => (
-                <div key={user.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                  <Avatar name={user.ten || user.name || user.email} />
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-slate-900">{user.ten || user.name || user.email}</p>
-                    <p className="truncate text-xs text-slate-500">{user.email}</p>
+            <div className="divide-y divide-slate-100">
+              {recentUsers.map((user) => {
+                const role = (user.vaiTro || user.role || '').toUpperCase();
+                let roleBadgeClass = 'bg-slate-100 text-slate-600 border-slate-200';
+                if (role === 'ADMIN') {
+                  roleBadgeClass = 'bg-rose-50 text-rose-700 border-rose-100';
+                } else if (role === 'INSTRUCTOR') {
+                  roleBadgeClass = 'bg-purple-50 text-purple-700 border-purple-100';
+                } else if (role === 'STUDENT') {
+                  roleBadgeClass = 'bg-blue-50 text-blue-700 border-blue-100';
+                }
+
+                return (
+                  <div key={user.id} className="flex items-center justify-between gap-3 py-3.5 first:pt-0 last:pb-0 transition-colors hover:bg-slate-50/40 px-1 rounded-lg">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <Avatar name={user.ten || user.name || user.email} />
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-slate-800">{user.ten || user.name || user.email}</p>
+                        <p className="truncate text-xs text-slate-400 mt-0.5">{user.email}</p>
+                      </div>
+                    </div>
+                    <div className="shrink-0 text-right flex flex-col items-end gap-1">
+                      <span className={`rounded-full border px-2.5 py-0.5 text-[10px] font-semibold tracking-wide uppercase ${roleBadgeClass}`}>
+                        {roleLabels[role] || role}
+                      </span>
+                      {user.createdAt ? (
+                        <p className="text-[10px] text-slate-400 mt-1">{formatDate(user.createdAt)}</p>
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="shrink-0 text-right">
-                    <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-semibold text-slate-600">
-                      {roleLabels[user.vaiTro || user.role] || user.vaiTro || user.role}
-                    </span>
-                    {user.createdAt ? <p className="mt-1 text-[11px] text-slate-400">{formatDate(user.createdAt)}</p> : null}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <p className="py-6 text-center text-sm text-slate-400">Chưa có người dùng mới.</p>
@@ -577,18 +611,29 @@ const AdminDashboard = ({ data, loading }) => {
         <section className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
           <h3 className="mb-4 font-semibold text-slate-900">Hoạt động gần đây</h3>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-            {recentActivities.map((item, index) => (
-              <Link key={`${item.type || 'activity'}-${item.createdAt || index}`} to={item.link || '/admin'} className="flex items-center gap-3 rounded-xl border border-slate-100 p-3 transition hover:border-purple-100 hover:bg-purple-50/40">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600">
-                  <FileCheck className="h-4 w-4" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-semibold text-slate-900">{item.title}</p>
-                  <p className="truncate text-xs text-slate-500">{item.description}</p>
-                </div>
-                <span className="shrink-0 text-[11px] text-slate-400">{item.createdAt ? formatDate(item.createdAt) : ''}</span>
-              </Link>
-            ))}
+            {recentActivities.map((item, index) => {
+              const { icon: ActivityIcon, style } = getActivityConfig(item.title, item.description);
+              return (
+                <Link
+                  key={`${item.type || 'activity'}-${item.createdAt || index}`}
+                  to={item.link || '/admin'}
+                  className="flex items-center gap-3 rounded-xl border border-slate-100 p-3.5 transition hover:border-purple-200 hover:shadow-sm bg-white"
+                >
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border ${style}`}>
+                    <ActivityIcon className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-semibold text-slate-800">{item.title}</p>
+                    <p className="truncate text-xs text-slate-500 mt-0.5">{item.description}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <span className="text-[10px] text-slate-400 font-medium bg-slate-50 px-2 py-0.5 rounded-md border border-slate-100">
+                      {item.createdAt ? formatDate(item.createdAt) : ''}
+                    </span>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </section>
       ) : null}
@@ -653,26 +698,44 @@ const AdminStatLink = ({ to, icon: Icon, label, value, subtitle, color, loading 
   if (loading) return <StatCard icon={Icon} label={label} value={value} subtitle={subtitle} color={color} loading />;
 
   return (
-    <Link to={to} className="block rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-200">
+    <Link to={to} className="block rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-205 transition hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(0,0,0,0.015)]">
       <StatCard icon={Icon} label={label} value={value} subtitle={subtitle} color={color} />
     </Link>
   );
 };
 
-const AdminTaskItem = ({ icon: Icon, label, value, to, color }) => (
-  <div className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50/60 p-3">
-    <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${color}`}>
-      <Icon className="h-5 w-5" />
+const AdminTaskItem = ({ icon: Icon, label, value, to, color }) => {
+  let parsedIconColor = color;
+  if (color.includes('rose')) {
+    parsedIconColor = 'bg-rose-50 text-rose-600 dark:bg-rose-950/30 dark:text-rose-400';
+  } else if (color.includes('amber')) {
+    parsedIconColor = 'bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400';
+  } else if (color.includes('sky')) {
+    parsedIconColor = 'bg-sky-50 text-sky-600 dark:bg-sky-950/30 dark:text-sky-400';
+  } else if (color.includes('orange')) {
+    parsedIconColor = 'bg-orange-50 text-orange-600 dark:bg-orange-950/30 dark:text-orange-400';
+  }
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 bg-white p-4 transition-all duration-200 hover:border-purple-200 hover:shadow-sm">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${parsedIconColor}`}>
+          <Icon className="h-5 w-5" />
+        </div>
+        <div className="min-w-0">
+          <p className="truncate text-xs font-medium text-slate-500">{label}</p>
+          <p className="text-lg font-bold text-slate-900 mt-0.5">{value}</p>
+        </div>
+      </div>
+      <Link
+        to={to}
+        className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-purple-700 shadow-sm ring-1 ring-purple-100/50 transition hover:bg-purple-50 shrink-0"
+      >
+        Xem
+      </Link>
     </div>
-    <div className="min-w-0 flex-1">
-      <p className="truncate text-sm font-medium text-slate-900">{label}</p>
-      <p className="text-lg font-bold text-slate-950">{value}</p>
-    </div>
-    <Link to={to} className="rounded-lg bg-white px-3 py-1.5 text-xs font-semibold text-purple-700 shadow-sm ring-1 ring-purple-100 transition hover:bg-purple-50">
-      Xem
-    </Link>
-  </div>
-);
+  );
+};
 
 const ListSkeleton = () => (
   <div className="space-y-3">
@@ -719,7 +782,7 @@ const QuestRow = ({ icon: Icon, title, subtitle, color, right, done, reward }) =
 );
 
 const Avatar = ({ name = '' }) => (
-  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-300 to-pink-300 font-bold text-white">
+  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-purple-300 to-pink-300 font-bold text-white shadow-sm">
     {(name || 'A').trim().charAt(0).toUpperCase()}
   </div>
 );
@@ -738,12 +801,12 @@ const OverviewRow = ({ icon: Icon, label, value, color }) => {
   };
 
   return (
-    <div className={`flex items-center justify-between rounded-xl border bg-gradient-to-r p-4 ${classes[color]}`}>
+    <div className={`flex items-center justify-between rounded-xl border bg-gradient-to-r p-4 transition-all duration-200 hover:shadow-sm ${classes[color]}`}>
       <div className="flex items-center gap-3">
         <Icon className="h-5 w-5" />
-        <span className="text-sm font-medium text-slate-900">{label}</span>
+        <span className="text-sm font-medium text-slate-800">{label}</span>
       </div>
-      <span className="text-lg font-bold">{value}</span>
+      <span className="text-lg font-bold tracking-tight text-slate-900">{value}</span>
     </div>
   );
 };
