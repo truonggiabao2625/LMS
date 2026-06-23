@@ -18,7 +18,9 @@ var connectionString =
     ?? builder.Configuration["DATABASE_URL"]
     ?? "Server=127.0.0.1,11433;Database=lms;User Id=sa;Password=LmsPassw0rd#2026;TrustServerCertificate=True;Encrypt=False";
 
-var frontendUrl = builder.Configuration["FRONTEND_URL"] ?? "http://localhost:5173";
+var rawFrontendUrl = builder.Configuration["FRONTEND_URL"] ?? "http://localhost:5173";
+var frontendUrl = rawFrontendUrl.Trim().TrimEnd('/');
+Console.WriteLine($"[CORS POLICY] Configured frontendUrl: '{frontendUrl}' (Raw: '{rawFrontendUrl}')");
 var jwtSecret = builder.Configuration["JWT_SECRET"] ?? "change-me-to-a-long-random-secret";
 var jwtKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 static string? FirstConfigured(params string?[] values) =>
