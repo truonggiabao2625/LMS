@@ -20,6 +20,11 @@ var connectionString =
 
 var rawFrontendUrl = builder.Configuration["FRONTEND_URL"] ?? "http://localhost:5173";
 var frontendUrl = rawFrontendUrl.Trim().TrimEnd('/');
+if (!frontendUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && 
+    !frontendUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+{
+    frontendUrl = "https://" + frontendUrl;
+}
 Console.WriteLine($"[CORS POLICY] Configured frontendUrl: '{frontendUrl}' (Raw: '{rawFrontendUrl}')");
 var jwtSecret = builder.Configuration["JWT_SECRET"] ?? "change-me-to-a-long-random-secret";
 var jwtKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
