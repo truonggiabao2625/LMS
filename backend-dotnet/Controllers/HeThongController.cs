@@ -9,6 +9,7 @@ namespace LMS.Api.Controllers;
 public class HeThongController : ControllerBase
 {
     [HttpGet("/")]
+    [HttpHead("/")]
     public IActionResult TrangChu() => Content("LMS API đang chạy!");
 
     [HttpGet("/health")]
