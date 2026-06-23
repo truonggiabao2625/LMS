@@ -351,30 +351,196 @@ public class QuanTriController(ApplicationDbContext db) : ControllerBase
         var loi = TroGiup.YeuCauAdmin(User);
         if (loi is not null) return loi;
 
-        var query = db.KhoaHoc.AsNoTracking().Include(c => c.CacGhiDanh).AsQueryable();
+        var query = db.DanhMuc.AsNoTracking().AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(q))
         {
-            var tuKhoa = q.Trim();
-            query = query.Where(c => c.ChuyenMuc.Contains(tuKhoa));
+            var cleanQuery = q.Trim().ToLower();
+            query = query.Where(dm => dm.Ten.ToLower().Contains(cleanQuery) || (dm.MoTa != null && dm.MoTa.ToLower().Contains(cleanQuery)));
         }
 
-        var courses = await query.ToListAsync();
-        var categories = courses
-            .GroupBy(c => string.IsNullOrWhiteSpace(c.ChuyenMuc) ? "Khác" : c.ChuyenMuc.Trim())
-            .Select(group => new
-            {
-                id = group.Key,
-                name = group.Key,
-                courseCount = group.Count(),
-                publishedCount = group.Count(c => c.DaXuatBan || c.TrangThai == "PUBLIC"),
-                studentCount = group.SelectMany(c => c.CacGhiDanh).Select(e => e.NguoiDungId).Distinct().Count()
-            })
-            .OrderByDescending(item => item.courseCount)
-            .ThenBy(item => item.name)
-            .ToList();
+        var categoriesList = await query.ToListAsync();
 
-        return Results.Ok(categories);
+        var categoryStats = await db.KhoaHoc
+            .AsNoTracking()
+            .Where(c => c.DanhMucId != null)
+            .Select(c => new
+            {
+                c.DanhMucId,
+                c.DaXuatBan,
+                c.TrangThai,
+                StudentIds = c.CacGhiDanh.Select(e => e.NguoiDungId)
+            })
+            .ToListAsync();
+
+        var statsGrouped = categoryStats
+            .GroupBy(c => c.DanhMucId)
+            .ToDictionary(
+                g => g.Key!,
+                g => new
+                {
+                    courseCount = g.Count(),
+                    publishedCount = g.Count(c => c.DaXuatBan || c.TrangThai == "PUBLIC"),
+                    studentCount = g.SelectMany(c => c.StudentIds).Distinct().Count()
+                }
+            );
+
+        var result = categoriesList.Select(dm =>
+        {
+            statsGrouped.TryGetValue(dm.Id, out var stats);
+            return new
+            {
+                id = dm.Id,
+                name = dm.Ten,
+                slug = dm.Slug,
+                moTa = dm.MoTa,
+                hoatDong = dm.HoatDong,
+                courseCount = stats?.courseCount ?? 0,
+                publishedCount = stats?.publishedCount ?? 0,
+                studentCount = stats?.studentCount ?? 0
+            };
+        })
+        .OrderByDescending(item => item.courseCount)
+        .ThenBy(item => item.name)
+        .ToList();
+
+        return Results.Ok(result);
+    }
+
+    [HttpPost("/api/admin/categories")]
+    public async Task<IResult> TaoDanhMuc([FromBody] DTOs.YeuCau.TaoDanhMucRequest yeuCau)
+    {
+        var loi = TroGiup.YeuCauAdmin(User);
+        if (loi is not null) return loi;
+
+        var name = yeuCau.Ten?.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Results.BadRequest(new { message = "Tên danh mục không được để trống." });
+        }
+
+        if (await db.DanhMuc.AnyAsync(dm => dm.Ten.ToLower() == name.ToLower()))
+        {
+            return Results.Conflict(new { message = "Tên danh mục này đã tồn tại." });
+        }
+
+        var baseSlug = TroGiup.TaoSlug(name);
+        var slug = baseSlug;
+        int count = 1;
+        while (await db.DanhMuc.AnyAsync(dm => dm.Slug == slug))
+        {
+            slug = $"{baseSlug}-{count++}";
+        }
+
+        var now = DateTime.UtcNow;
+        var category = new DanhMuc
+        {
+            Id = Guid.NewGuid().ToString("N"),
+            Ten = name,
+            Slug = slug,
+            MoTa = yeuCau.MoTa?.Trim(),
+            HoatDong = true,
+            NgayTao = now,
+            NgayCapNhat = now
+        };
+
+        db.DanhMuc.Add(category);
+        await GhiNhatKy("CREATE_CATEGORY", "Category", category.Id, new { category.Ten, category.Slug });
+        await db.SaveChangesAsync();
+
+        return Results.Created($"/api/admin/categories/{category.Id}", new
+        {
+            id = category.Id,
+            name = category.Ten,
+            slug = category.Slug,
+            moTa = category.MoTa,
+            hoatDong = category.HoatDong,
+            courseCount = 0,
+            publishedCount = 0,
+            studentCount = 0
+        });
+    }
+
+    [HttpPut("/api/admin/categories/{id}")]
+    public async Task<IResult> CapNhatDanhMuc(string id, [FromBody] DTOs.YeuCau.TaoDanhMucRequest yeuCau)
+    {
+        var loi = TroGiup.YeuCauAdmin(User);
+        if (loi is not null) return loi;
+
+        var category = await db.DanhMuc.FirstOrDefaultAsync(dm => dm.Id == id);
+        if (category is null) return Results.NotFound(new { message = "Không tìm thấy danh mục" });
+
+        // Check if category has courses
+        var hasCourses = await db.KhoaHoc.AnyAsync(c => c.DanhMucId == id);
+        if (hasCourses)
+        {
+            return Results.BadRequest(new { message = "Không thể sửa vì danh mục đang có khóa học" });
+        }
+
+        var name = yeuCau.Ten?.Trim();
+        if (string.IsNullOrWhiteSpace(name))
+        {
+            return Results.BadRequest(new { message = "Tên danh mục không được để trống." });
+        }
+
+        if (await db.DanhMuc.AnyAsync(dm => dm.Ten.ToLower() == name.ToLower() && dm.Id != id))
+        {
+            return Results.Conflict(new { message = "Tên danh mục này đã tồn tại." });
+        }
+
+        if (category.Ten != name)
+        {
+            category.Ten = name;
+            var baseSlug = TroGiup.TaoSlug(name);
+            var slug = baseSlug;
+            int count = 1;
+            while (await db.DanhMuc.AnyAsync(dm => dm.Slug == slug && dm.Id != id))
+            {
+                slug = $"{baseSlug}-{count++}";
+            }
+            category.Slug = slug;
+        }
+
+        category.MoTa = yeuCau.MoTa?.Trim();
+        category.NgayCapNhat = DateTime.UtcNow;
+
+        await GhiNhatKy("UPDATE_CATEGORY", "Category", category.Id, new { category.Ten, category.Slug });
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new
+        {
+            id = category.Id,
+            name = category.Ten,
+            slug = category.Slug,
+            moTa = category.MoTa,
+            hoatDong = category.HoatDong,
+            courseCount = 0,
+            publishedCount = 0,
+            studentCount = 0
+        });
+    }
+
+    [HttpDelete("/api/admin/categories/{id}")]
+    public async Task<IResult> XoaDanhMuc(string id)
+    {
+        var loi = TroGiup.YeuCauAdmin(User);
+        if (loi is not null) return loi;
+
+        var category = await db.DanhMuc.FirstOrDefaultAsync(dm => dm.Id == id);
+        if (category is null) return Results.NotFound(new { message = "Không tìm thấy danh mục" });
+
+        // Check if category has courses
+        var hasCourses = await db.KhoaHoc.AnyAsync(c => c.DanhMucId == id);
+        if (hasCourses)
+        {
+            return Results.BadRequest(new { message = "Không thể xóa vì danh mục đang có khóa học" });
+        }
+
+        db.DanhMuc.Remove(category);
+        await GhiNhatKy("DELETE_CATEGORY", "Category", category.Id, new { category.Ten, category.Slug });
+        await db.SaveChangesAsync();
+
+        return Results.Ok(new { message = "Đã xóa danh mục thành công" });
     }
 
     [HttpGet("/api/admin/coupons")]

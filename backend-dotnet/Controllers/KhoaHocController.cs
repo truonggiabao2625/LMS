@@ -34,7 +34,7 @@ public class KhoaHocController(IDichVuKhoaHoc dichVu, ApplicationDbContext db) :
     {
         var danhMuc = await db.DanhMuc
             .AsNoTracking()
-            .Where(dm => dm.HoatDong && db.KhoaHoc.Any(kh => kh.DanhMucId == dm.Id && kh.DaXuatBan))
+            .Where(dm => dm.HoatDong)
             .OrderBy(dm => dm.Ten)
             .Select(dm => new
             {

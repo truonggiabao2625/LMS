@@ -234,57 +234,57 @@ export default function AdminTransactions({ initialTab = 'all' }) {
   });
 
   const columnsTransactions = [
-    { title: 'Giao dịch', data: 'type', className: 'px-5 py-4' },
-    { title: 'Người dùng', data: 'user.name', className: 'px-5 py-4' },
-    { title: 'Khóa học', data: 'course.title', className: 'px-5 py-4' },
-    { title: 'Thanh toán ngoài', data: 'id', className: 'px-5 py-4' },
-    { title: 'Trạng thái', data: 'status', className: 'px-5 py-4' },
-    { title: 'Số tiền', data: 'amount', className: 'px-5 py-4 text-right' }
+    { title: 'Giao dịch', data: 'type', className: 'px-5 py-4 max-w-[220px]' },
+    { title: 'Người dùng', data: 'user.name', className: 'px-5 py-4 max-w-[180px]' },
+    { title: 'Khóa học', data: 'course.title', className: 'px-5 py-4 max-w-[200px]' },
+    { title: 'Thanh toán ngoài', data: 'id', className: 'px-5 py-4 max-w-[180px]' },
+    { title: 'Trạng thái', data: 'status', className: 'px-5 py-4 min-w-[100px]' },
+    { title: 'Số tiền', data: 'amount', className: 'px-5 py-4 text-right min-w-[130px]' }
   ];
 
   const slotsTransactions = {
     0: (data, row) => (
-      <div className="flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+      <div className="flex items-center gap-3 max-w-[220px]">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50 text-amber-700 shrink-0">
           <CreditCard className="h-5 w-5" />
         </div>
-        <div>
-          <p className="font-medium text-slate-900">{transactionLabel[row.type] || row.type}</p>
+        <div className="min-w-0">
+          <p className="font-medium text-slate-900 truncate">{transactionLabel[row.type] || row.type}</p>
           <p className="text-xs text-slate-500">{new Date(row.createdAt).toLocaleString('vi-VN')}</p>
-          {row.note ? <p className="mt-0.5 text-xs text-slate-400 max-w-xs truncate">{row.note}</p> : null}
+          {row.note ? <p className="mt-0.5 text-xs text-slate-400 truncate" title={row.note}>{row.note}</p> : null}
         </div>
       </div>
     ),
     1: (data, row) => (
-      <div>
-        <p className="text-slate-900">{row.user?.name || '-'}</p>
-        <p className="text-xs text-slate-500">{row.user?.email || ''}</p>
+      <div className="max-w-[180px]">
+        <p className="font-medium text-slate-900 truncate" title={row.user?.name}>{row.user?.name || '-'}</p>
+        <p className="text-xs text-slate-500 truncate" title={row.user?.email}>{row.user?.email || ''}</p>
       </div>
     ),
     2: (data, row) => (
-      <span className="text-slate-600">
+      <div className="max-w-[200px] truncate text-slate-600 font-medium" title={row.course?.title}>
         {row.course?.title || '-'}
-      </span>
+      </div>
     ),
     3: (data, row) => (
       row.externalPayment ? (
-        <div>
-          <p>
+        <div className="max-w-[180px]">
+          <p className="truncate text-slate-800" title={`${row.externalPayment.provider} - ${row.externalPayment.status}`}>
             {row.externalPayment.provider} - {row.externalPayment.status}
           </p>
-          <p className="text-xs text-slate-400">{formatCurrency(row.externalPayment.amount)}</p>
+          <p className="text-xs text-slate-400 truncate">{formatCurrency(row.externalPayment.amount)}</p>
         </div>
       ) : (
         '-'
       )
     ),
     4: (data, row) => (
-      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${transactionStatusClasses[row.status] || 'bg-slate-50 text-slate-700 border border-slate-100'}`}>
+      <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold whitespace-nowrap ${transactionStatusClasses[row.status] || 'bg-slate-50 text-slate-700 border border-slate-100'}`}>
         {transactionStatusLabel[row.status] || row.status}
       </span>
     ),
     5: (data, row) => (
-      <div className="text-right">
+      <div className="text-right whitespace-nowrap">
         <p className={row.amount >= 0 ? 'font-semibold text-emerald-600' : 'font-semibold text-rose-600'}>
           {row.amount >= 0 ? '+' : ''}{formatCurrency(row.amount)}
         </p>
@@ -294,44 +294,44 @@ export default function AdminTransactions({ initialTab = 'all' }) {
   };
 
   const columnsWithdrawals = [
-    { title: 'Giảng viên', data: 'instructorName', className: 'px-5 py-4' },
-    { title: 'Số tiền', data: 'amount', className: 'px-5 py-4 font-semibold text-slate-950' },
-    { title: 'Ngân hàng', data: 'bankName', className: 'px-5 py-4' },
-    { title: 'Ghi chú', data: 'note', className: 'px-5 py-4 max-w-[200px] truncate' },
-    { title: 'Thời gian', data: 'createdAt', className: 'px-5 py-4 text-slate-500' },
-    { title: 'Trạng thái', data: 'status', className: 'px-5 py-4 text-center' },
-    { title: 'Thao tác', data: 'id', className: 'px-5 py-4 text-right', orderable: false }
+    { title: 'Giảng viên', data: 'instructorName', className: 'px-5 py-4 max-w-[180px]' },
+    { title: 'Số tiền', data: 'amount', className: 'px-5 py-4 font-semibold text-slate-950 min-w-[120px]' },
+    { title: 'Ngân hàng', data: 'bankName', className: 'px-5 py-4 max-w-[200px]' },
+    { title: 'Ghi chú', data: 'note', className: 'px-5 py-4 max-w-[200px]' },
+    { title: 'Thời gian', data: 'createdAt', className: 'px-5 py-4 text-slate-500 min-w-[140px]' },
+    { title: 'Trạng thái', data: 'status', className: 'px-5 py-4 text-center min-w-[110px]' },
+    { title: 'Thao tác', data: 'id', className: 'px-5 py-4 text-right min-w-[100px]', orderable: false }
   ];
 
   const slotsWithdrawals = {
     0: (data, row) => (
-      <div>
-        <p className="font-medium text-slate-900">{row.instructorName}</p>
-        <p className="text-xs text-slate-500">{row.instructorEmail}</p>
+      <div className="max-w-[180px]">
+        <p className="font-medium text-slate-900 truncate" title={row.instructorName}>{row.instructorName}</p>
+        <p className="text-xs text-slate-500 truncate" title={row.instructorEmail}>{row.instructorEmail}</p>
       </div>
     ),
     1: (data, row) => (
-      <span>
+      <span className="whitespace-nowrap font-medium text-slate-900">
         {formatCurrency(row.amount)}
       </span>
     ),
     2: (data, row) => (
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 max-w-[200px]">
         <Landmark className="h-4 w-4 text-slate-400 shrink-0" />
-        <div>
-          <p className="font-medium text-slate-900">{row.bankName}</p>
-          <p className="text-xs text-slate-600">{row.accountNumber}</p>
-          <p className="text-[11px] text-slate-500 uppercase">{row.accountHolder}</p>
+        <div className="min-w-0">
+          <p className="font-medium text-slate-900 truncate" title={row.bankName}>{row.bankName}</p>
+          <p className="text-xs text-slate-600 truncate">{row.accountNumber}</p>
+          <p className="text-[11px] text-slate-500 uppercase truncate" title={row.accountHolder}>{row.accountHolder}</p>
         </div>
       </div>
     ),
     3: (data, row) => (
-      <span title={row.note}>
+      <div className="max-w-[200px] truncate text-slate-600" title={row.note}>
         {row.note || '-'}
-      </span>
+      </div>
     ),
     4: (data, row) => (
-      <span>
+      <span className="whitespace-nowrap text-slate-500">
         {new Date(row.createdAt).toLocaleString('vi-VN')}
       </span>
     ),
@@ -339,7 +339,7 @@ export default function AdminTransactions({ initialTab = 'all' }) {
       const statusClass = withdrawStatusClasses[row.status] || 'bg-slate-50 text-slate-700';
       const statusText = withdrawStatusLabel[row.status] || row.status;
       return (
-        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium border ${statusClass}`}>
+        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium border whitespace-nowrap ${statusClass}`}>
           {statusText}
         </span>
       );
@@ -369,40 +369,40 @@ export default function AdminTransactions({ initialTab = 'all' }) {
   };
 
   const columnsTopupRequests = [
-    { title: 'Học viên', data: 'studentName', className: 'px-5 py-4' },
-    { title: 'Số tiền', data: 'soTien', className: 'px-5 py-4 font-semibold text-slate-950' },
-    { title: 'Mã GD', data: 'maGiaoDich', className: 'px-5 py-4' },
-    { title: 'Nội dung chuyển khoản', data: 'noiDungChuyenKhoan', className: 'px-5 py-4' },
-    { title: 'Thời gian', data: 'ngayTao', className: 'px-5 py-4 text-slate-500' },
-    { title: 'Trạng thái', data: 'trangThai', className: 'px-5 py-4 text-center' },
-    { title: 'Lý do từ chối', data: 'lyDoTuChoi', className: 'px-5 py-4 max-w-[200px] truncate' },
-    { title: 'Thao tác', data: 'id', className: 'px-5 py-4 text-right', orderable: false }
+    { title: 'Học viên', data: 'studentName', className: 'px-5 py-4 max-w-[180px]' },
+    { title: 'Số tiền', data: 'soTien', className: 'px-5 py-4 font-semibold text-slate-950 min-w-[120px]' },
+    { title: 'Mã GD', data: 'maGiaoDich', className: 'px-5 py-4 max-w-[120px]' },
+    { title: 'Nội dung chuyển khoản', data: 'noiDungChuyenKhoan', className: 'px-5 py-4 max-w-[220px]' },
+    { title: 'Thời gian', data: 'ngayTao', className: 'px-5 py-4 text-slate-500 min-w-[140px]' },
+    { title: 'Trạng thái', data: 'trangThai', className: 'px-5 py-4 text-center min-w-[110px]' },
+    { title: 'Lý do từ chối', data: 'lyDoTuChoi', className: 'px-5 py-4 max-w-[180px]' },
+    { title: 'Thao tác', data: 'id', className: 'px-5 py-4 text-right min-w-[100px]', orderable: false }
   ];
 
   const slotsTopupRequests = {
     0: (data, row) => (
-      <div>
-        <p className="font-medium text-slate-900">{row.studentName || 'Học viên'}</p>
-        <p className="text-xs text-slate-500">{row.studentEmail || ''}</p>
+      <div className="max-w-[180px]">
+        <p className="font-medium text-slate-900 truncate" title={row.studentName}>{row.studentName || 'Học viên'}</p>
+        <p className="text-xs text-slate-500 truncate" title={row.studentEmail}>{row.studentEmail || ''}</p>
       </div>
     ),
     1: (data, row) => (
-      <span>
+      <span className="whitespace-nowrap font-medium text-slate-900">
         {formatCurrency(row.soTien)}
       </span>
     ),
     2: (data, row) => (
-      <span className="font-medium text-slate-700">
+      <span className="font-medium text-slate-700 truncate max-w-[120px] block" title={row.maGiaoDich}>
         {row.maGiaoDich}
       </span>
     ),
     3: (data, row) => (
-      <span className="text-slate-600">
+      <span className="text-slate-600 truncate max-w-[220px] block" title={row.noiDungChuyenKhoan}>
         {row.noiDungChuyenKhoan}
       </span>
     ),
     4: (data, row) => (
-      <span>
+      <span className="whitespace-nowrap text-slate-500">
         {new Date(row.ngayTao).toLocaleString('vi-VN')}
       </span>
     ),
@@ -411,15 +411,15 @@ export default function AdminTransactions({ initialTab = 'all' }) {
       const statusClass = topupStatusClasses[statusKey] || 'bg-amber-50 text-amber-700 border border-amber-100';
       const statusText = topupStatusLabel[statusKey] || row.trangThai;
       return (
-        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium border ${statusClass}`}>
+        <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-medium border whitespace-nowrap ${statusClass}`}>
           {statusText}
         </span>
       );
     },
     6: (data, row) => (
-      <span title={row.lyDoTuChoi}>
+      <div className="max-w-[180px] truncate text-slate-600" title={row.lyDoTuChoi}>
         {row.lyDoTuChoi || '-'}
-      </span>
+      </div>
     ),
     7: (data, row) => {
       const isPending = String(row.trangThai).toLowerCase() === 'pending';
@@ -477,7 +477,7 @@ export default function AdminTransactions({ initialTab = 'all' }) {
         ))}
       </div>
 
-      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm">
+      <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm max-w-full overflow-hidden">
         <DataTableToolbar
           searchValue={query}
           onSearchChange={setQuery}

@@ -81,3 +81,6 @@ public record LuuBaiKiemTraRequest(string? Title, string? Description, int? Pass
 
 /// <summary>Một câu hỏi trong bài kiểm tra</summary>
 public record CauHoiRequest(string? QuestionText, List<string>? Options, int CorrectOptionIndex, string? Explanation);
+
+/// <summary>Yêu cầu tạo/cập nhật danh mục</summary>
+public record TaoDanhMucRequest(string Ten, string? MoTa);

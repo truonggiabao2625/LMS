@@ -12,9 +12,9 @@ export default function DataTableToolbar({
   actions = null,
 }) {
   return (
-    <div className="flex flex-col gap-4 pb-4 md:flex-row md:items-center md:justify-between border-b border-slate-100 mb-2">
+    <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-100 mb-2">
       {/* Left controls: Search & custom filters */}
-      <div className="flex flex-1 flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         {onSearchChange && (
           <div className="relative w-full max-w-xs">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />

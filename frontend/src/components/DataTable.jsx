@@ -48,6 +48,8 @@ export default function DataTable({
     info: true,
     language: VIETNAMESE_LANG,
     responsive: true,
+    dom: 'tpi', // Show only Table, Pagination, and Info
+    autoWidth: false, // Allow custom column widths and truncation
     ...options
   };
 
