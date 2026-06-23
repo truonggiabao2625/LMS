@@ -46,7 +46,7 @@ public class ChatHub(ApplicationDbContext db, IDichVuChat chat) : Hub
             {
                 var userDetails = await db.NguoiDung
                     .Where(u => u.Id == userId)
-                    .Select(u => new { Id = u.Id, Ten = u.Ten, AnhDaiDien = u.AnhDaiDien, VaiTro = u.VaiTro })
+                    .Select(u => new { Id = u.Id, Name = u.Ten, Avatar = u.AnhDaiDien, Role = u.VaiTro })
                     .FirstOrDefaultAsync();
 
                 if (userDetails != null)

@@ -18,7 +18,14 @@ var connectionString =
     ?? builder.Configuration["DATABASE_URL"]
     ?? "Server=127.0.0.1,11433;Database=lms;User Id=sa;Password=LmsPassw0rd#2026;TrustServerCertificate=True;Encrypt=False";
 
-var frontendUrl = builder.Configuration["FRONTEND_URL"] ?? "http://localhost:5173";
+var rawFrontendUrl = builder.Configuration["FRONTEND_URL"] ?? "http://localhost:5173";
+var frontendUrl = rawFrontendUrl.Trim().TrimEnd('/');
+if (!frontendUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase) && 
+    !frontendUrl.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+{
+    frontendUrl = "https://" + frontendUrl;
+}
+Console.WriteLine($"[CORS POLICY] Configured frontendUrl: '{frontendUrl}' (Raw: '{rawFrontendUrl}')");
 var jwtSecret = builder.Configuration["JWT_SECRET"] ?? "change-me-to-a-long-random-secret";
 var jwtKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret));
 static string? FirstConfigured(params string?[] values) =>
@@ -168,8 +175,8 @@ var authentication = builder.Services
     });
 
 // Google authentication configuration
-var googleClientId = FirstConfigured(builder.Configuration["Authentication:Google:ClientId"], builder.Configuration["GOOGLE_CLIENT_ID"]);
-var googleClientSecret = FirstConfigured(builder.Configuration["Authentication:Google:ClientSecret"], builder.Configuration["GOOGLE_CLIENT_SECRET"]);
+var googleClientId = FirstConfigured(builder.Configuration["GOOGLE_CLIENT_ID"], builder.Configuration["Authentication:Google:ClientId"]);
+var googleClientSecret = FirstConfigured(builder.Configuration["GOOGLE_CLIENT_SECRET"], builder.Configuration["Authentication:Google:ClientSecret"]);
 if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(googleClientSecret))
 {
     authentication.AddGoogle("Google", options =>
@@ -194,6 +201,13 @@ if (!string.IsNullOrWhiteSpace(googleClientId) && !string.IsNullOrWhiteSpace(goo
     });
 }
 
+builder.Services.Configure<Microsoft.AspNetCore.Builder.ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+    options.KnownIPNetworks.Clear();
+    options.KnownProxies.Clear();
+});
+
 builder.Services.AddAuthorization();
 builder.Services.AddCors(options =>
 {
@@ -214,6 +228,8 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 await using (var scope = app.Services.CreateAsyncScope())
 {
@@ -254,11 +270,8 @@ await using (var scope = app.Services.CreateAsyncScope())
             END;
         END;
     ");
-
-    if (app.Environment.IsDevelopment())
-    {
-        await SeedData.SeedAsync(db);
-    }
+    // Luôn chạy seed data để đảm bảo tài khoản demo và dữ liệu mẫu có sẵn trên cơ sở dữ liệu Cloud
+    await SeedData.SeedAsync(db);
 }
 
 if (app.Environment.IsDevelopment())
@@ -275,9 +288,6 @@ app.MapControllers();
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}");
-app.MapControllerRoute(
-    name: "default",
-    pattern: "{controller=Home}/{action=Index}/{id?}");
 app.MapHub<LMS.Api.Hubs.ChatHub>("/chatHub");
 
 app.Run();

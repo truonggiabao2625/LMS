@@ -47,8 +47,12 @@ public class AiChatController(ApplicationDbContext db, IConfiguration configurat
             .ToListAsync();
 
         var apiKey = configuration["Gemini:ApiKey"];
+        if (string.IsNullOrWhiteSpace(apiKey) || apiKey == "YOUR_GEMINI_API_KEY_HERE")
+        {
+            apiKey = configuration["GEMINI_API_KEY"];
+        }
 
-        if (!string.IsNullOrWhiteSpace(apiKey))
+        if (!string.IsNullOrWhiteSpace(apiKey) && apiKey != "YOUR_GEMINI_API_KEY_HERE")
         {
             try
             {
@@ -242,6 +246,11 @@ public class AiChatController(ApplicationDbContext db, IConfiguration configurat
             {
                 reply = "Chào bạn! Mình là Trợ lý AI của Skillio. Mình có thể hỗ trợ bạn tìm kiếm khóa học phù hợp. Dưới đây là một số khóa học nổi bật nhất hệ thống hiện tại:";
             }
+        }
+
+        if (string.IsNullOrWhiteSpace(reply))
+        {
+            reply = "Chào bạn! Dưới đây là danh sách các khóa học hàng đầu trên Skillio phù hợp nhất với tìm kiếm của bạn:";
         }
 
         foreach (var c in resultList)
